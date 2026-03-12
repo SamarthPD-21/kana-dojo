@@ -112,5 +112,11 @@
   "termB": "image",
   "explanation": "Often means impression/public image. (Set 3)",
   "example": "会社のイメージが良くなった。"
-  }
+},
+  {
+  "termA": "ドンマイ (donmai)",
+  "termB": "don't mind (English)",
+  "explanation": "Used to comfort someone: 'never mind'. (Set 4)",
+  "example": "ミスしてもドンマイ！"
+}
 ]
