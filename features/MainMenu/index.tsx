@@ -241,11 +241,11 @@ const MainMenu = () => {
                 'hidden sm:inline-flex',
                 'duration-250 hover:cursor-pointer hover:scale-105',
                 'active:scale-100 active:duration-225',
-                'fill-current text-(--secondary-color) hover:text-(--main-color)',
+                ' text-(--secondary-color) hover:text-(--main-color)',
               )}
               aria-label='Report a bug'
             >
-              <Bug size={32} fill='currentColor' />
+              <Bug size={32}  />
             </button>
             <Heart
               size={32}
@@ -347,7 +347,7 @@ const MainMenu = () => {
               key={i}
               className={clsx(
                 'flex flex-row items-center gap-1 text-(--secondary-color) hover:cursor-pointer hover:text-(--main-color)',
-                link.name === 'credits' && 'hidden lg:flex',
+                (link.name === 'credits' || link.name === 'about') && 'hidden sm:flex',
               )}
               onClick={() => playClick()}
             >
