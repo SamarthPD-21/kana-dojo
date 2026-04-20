@@ -167,9 +167,12 @@ export function createAdaptiveSelector(storageKey?: string) {
         ),
       };
 
-      persistInFlight = localforage.setItem(persistKey, stored).catch(error => {
-        console.warn('[AdaptiveSelection] Failed to save to storage:', error);
-      });
+      persistInFlight = localforage
+        .setItem(persistKey, stored)
+        .then(() => undefined)
+        .catch(error => {
+          console.warn('[AdaptiveSelection] Failed to save to storage:', error);
+        });
       await persistInFlight;
       persistInFlight = null;
     } while (persistQueued);

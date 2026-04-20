@@ -32,7 +32,10 @@ import {
   formatKeyToQuizType,
   getAvailableQuestionFormats,
   getQuestionFormatKey,
+  type VocabQuestionFormat,
+  type VocabQuizType,
 } from '@/features/Vocabulary/components/Game/vocabFormatLock';
+import useSetProgressStore from '@/features/Progress/store/useSetProgressStore';
 
 const random = new Random();
 const adaptiveSelector = getGlobalAdaptiveSelector();
@@ -71,6 +74,9 @@ const VocabTilesMode = ({
   onWrong: externalOnWrong,
 }: VocabTilesModeProps) => {
   const logAttempt = useClassicSessionStore(state => state.logAttempt);
+  const recordVocabularyProgress = useSetProgressStore(
+    state => state.recordVocabularyProgress,
+  );
   // Smart reverse mode - used when not controlled externally
   const {
     isReverse: internalIsReverse,
@@ -201,7 +207,7 @@ const VocabTilesMode = ({
 
       // Adjust quiz type based on the selected word
       // Skip reading quiz for kana-only words since reading === word (pointless exercise)
-      let effectiveQuizType = currentQuizType;
+      let effectiveQuizType: VocabQuizType = currentQuizType;
       if (currentQuizType === 'reading' && !containsKanji(selectedWord)) {
         effectiveQuizType = 'meaning';
       }
@@ -210,7 +216,9 @@ const VocabTilesMode = ({
         getAvailableQuestionFormats(selectedWord, isReverse),
       );
       if (lockedFormat) {
-        effectiveQuizType = formatKeyToQuizType(lockedFormat);
+        effectiveQuizType = formatKeyToQuizType(
+          lockedFormat as VocabQuestionFormat,
+        );
       }
 
       // Determine correct answer based on quiz type and mode
@@ -384,6 +392,7 @@ const VocabTilesMode = ({
       // Track stats for the word
       addCharacterToHistory(questionData.word);
       incrementCharacterScore(questionData.word, 'correct');
+      void recordVocabularyProgress(questionData.word, questionData.quizType);
       adaptiveSelector.updateCharacterWeight(questionData.word, true);
       adaptiveSelector.registerQuestionFormatResult(
         questionData.word,
@@ -429,7 +438,13 @@ const VocabTilesMode = ({
         isCorrect: true,
         timeTakenMs: answerTimeMs,
         optionsShown: Array.from(questionData.allTiles.values()),
-        extra: { isReverse, quizType: questionData.quizType },
+        extra: {
+          contentType: 'vocabulary',
+          canonicalItemKey: questionData.word,
+          questionType: questionData.quizType,
+          isReverse,
+          quizType: questionData.quizType,
+        },
       });
     } else {
       resetAnswerTimer();
@@ -470,7 +485,13 @@ const VocabTilesMode = ({
         inputKind: 'word_building',
         isCorrect: false,
         optionsShown: Array.from(questionData.allTiles.values()),
-        extra: { isReverse, quizType: questionData.quizType },
+        extra: {
+          contentType: 'vocabulary',
+          canonicalItemKey: questionData.word,
+          questionType: questionData.quizType,
+          isReverse,
+          quizType: questionData.quizType,
+        },
       });
     }
   }, [
@@ -520,13 +541,16 @@ const VocabTilesMode = ({
     externalOnCorrect?.([questionData.word]);
 
     // Determine next quiz type based on word content
-    const baseNextType = getNextQuizType(questionData.word, quizType);
+    const baseNextType: VocabQuizType = getNextQuizType(
+      questionData.word,
+      quizType,
+    );
     const lockedFormat = adaptiveSelector.getPreferredLockedFormat(
       questionData.word,
       getAvailableQuestionFormats(questionData.word, isReverse),
     );
     const nextType = lockedFormat
-      ? formatKeyToQuizType(lockedFormat)
+      ? formatKeyToQuizType(lockedFormat as VocabQuestionFormat)
       : baseNextType;
     setQuizType(nextType);
     resetGame(nextType);

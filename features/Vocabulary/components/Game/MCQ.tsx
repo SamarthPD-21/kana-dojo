@@ -21,7 +21,11 @@ import {
   formatKeyToQuizType,
   getAvailableQuestionFormats,
   getQuestionFormatKey,
+  type VocabQuestionFormat,
+  type VocabQuizType,
 } from '@/features/Vocabulary/components/Game/vocabFormatLock';
+import useClassicSessionStore from '@/shared/store/useClassicSessionStore';
+import useSetProgressStore from '@/features/Progress/store/useSetProgressStore';
 
 const random = new Random();
 
@@ -111,6 +115,10 @@ interface VocabMCQProps {
 
 const VocabMCQ = ({ selectedWordObjs, isHidden }: VocabMCQProps) => {
   const hasWords = !!selectedWordObjs && selectedWordObjs.length > 0;
+  const logAttempt = useClassicSessionStore(state => state.logAttempt);
+  const recordVocabularyProgress = useSetProgressStore(
+    state => state.recordVocabularyProgress,
+  );
   const { isReverse, decideNextMode, recordWrongAnswer } =
     useSmartReverseMode();
   const {
@@ -255,6 +263,21 @@ const VocabMCQ = ({ selectedWordObjs, isHidden }: VocabMCQProps) => {
         </>,
       );
       setCurrentWordObj(correctWordObj as IVocabObj);
+      logAttempt({
+        questionId: correctChar,
+        questionPrompt: String(displayChar),
+        expectedAnswers: [String(targetChar)],
+        userAnswer: selectedOption,
+        inputKind: 'pick',
+        isCorrect: true,
+        optionsShown: shuffledOptions,
+        extra: {
+          contentType: 'vocabulary',
+          canonicalItemKey: correctChar,
+          questionType: quizType,
+          isReverse,
+        },
+      });
     } else {
       handleWrongAnswer(selectedOption);
       setFeedback(
@@ -263,6 +286,21 @@ const VocabMCQ = ({ selectedWordObjs, isHidden }: VocabMCQProps) => {
           <CircleX className='inline text-(--main-color)' />
         </>,
       );
+      logAttempt({
+        questionId: correctChar,
+        questionPrompt: String(displayChar),
+        expectedAnswers: [String(targetChar)],
+        userAnswer: selectedOption,
+        inputKind: 'pick',
+        isCorrect: false,
+        optionsShown: shuffledOptions,
+        extra: {
+          contentType: 'vocabulary',
+          canonicalItemKey: correctChar,
+          questionType: quizType,
+          isReverse,
+        },
+      });
     }
   };
 
@@ -271,6 +309,7 @@ const VocabMCQ = ({ selectedWordObjs, isHidden }: VocabMCQProps) => {
     addCharacterToHistory(correctChar);
     incrementCharacterScore(correctChar, 'correct');
     incrementCorrectAnswers();
+    void recordVocabularyProgress(correctChar, quizType);
     setScore(score + 1);
     setWrongSelectedAnswers([]);
     triggerCrazyMode();
@@ -331,7 +370,7 @@ const VocabMCQ = ({ selectedWordObjs, isHidden }: VocabMCQProps) => {
     const newWordObj = wordObjMap.get(newChar);
     const wordToCheck = newWordObj?.word ?? '';
 
-    const baseQuizType = containsKanji(wordToCheck)
+    const baseQuizType: VocabQuizType = containsKanji(wordToCheck)
       ? quizType === 'meaning'
         ? 'reading'
         : 'meaning'
@@ -341,7 +380,9 @@ const VocabMCQ = ({ selectedWordObjs, isHidden }: VocabMCQProps) => {
       getAvailableQuestionFormats(wordToCheck, isReverse),
     );
     setQuizType(
-      lockedFormat ? formatKeyToQuizType(lockedFormat) : baseQuizType,
+      lockedFormat
+        ? formatKeyToQuizType(lockedFormat as VocabQuestionFormat)
+        : baseQuizType,
     );
   };
 

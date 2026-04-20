@@ -20,7 +20,10 @@ import {
   formatKeyToQuizType,
   getAvailableQuestionFormats,
   getQuestionFormatKey,
+  type VocabQuestionFormat,
+  type VocabQuizType,
 } from '@/features/Vocabulary/components/Game/vocabFormatLock';
+import useSetProgressStore from '@/features/Progress/store/useSetProgressStore';
 
 // Get the global adaptive selector for weighted character selection
 const adaptiveSelector = getGlobalAdaptiveSelector();
@@ -40,6 +43,9 @@ const VocabInputGame = ({
   isReverse = false,
 }: VocabInputGameProps) => {
   const logAttempt = useClassicSessionStore(state => state.logAttempt);
+  const recordVocabularyProgress = useSetProgressStore(
+    state => state.recordVocabularyProgress,
+  );
   const { score, setScore } = useStatsDisplay();
   const gameStats = useGameStats();
 
@@ -123,7 +129,7 @@ const VocabInputGame = ({
     adaptiveSelector.markCharacterSeen(newChar);
     setCorrectChar(newChar);
 
-    const baseQuizType =
+    const baseQuizType: VocabQuizType =
       /[\u4E00-\u9FAF]/.test(newChar) && quizType === 'meaning'
         ? 'reading'
         : 'meaning';
@@ -132,7 +138,9 @@ const VocabInputGame = ({
       getAvailableQuestionFormats(newChar, isReverse),
     );
     setQuizType(
-      lockedFormat ? formatKeyToQuizType(lockedFormat) : baseQuizType,
+      lockedFormat
+        ? formatKeyToQuizType(lockedFormat as VocabQuestionFormat)
+        : baseQuizType,
     );
   }, [isReverse, selectedWordObjs, correctChar, quizType]);
 
@@ -225,6 +233,7 @@ const VocabInputGame = ({
     gameStats.recordCorrect('vocabulary', correctChar, {
       timeTaken: answerTimeMs,
     });
+    void recordVocabularyProgress(correctChar, quizType);
     setScore(score + 1);
 
     triggerCrazyMode();
@@ -246,7 +255,13 @@ const VocabInputGame = ({
       inputKind: 'type',
       isCorrect: true,
       timeTakenMs: answerTimeMs,
-      extra: { isReverse, quizType },
+      extra: {
+        contentType: 'vocabulary',
+        canonicalItemKey: correctChar,
+        questionType: quizType,
+        isReverse,
+        quizType,
+      },
     });
   };
 
@@ -285,7 +300,13 @@ const VocabInputGame = ({
       userAnswer: inputValue.trim(),
       inputKind: 'type',
       isCorrect: false,
-      extra: { isReverse, quizType },
+      extra: {
+        contentType: 'vocabulary',
+        canonicalItemKey: correctChar,
+        questionType: quizType,
+        isReverse,
+        quizType,
+      },
     });
   };
 
