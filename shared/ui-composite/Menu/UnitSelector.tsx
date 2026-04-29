@@ -210,84 +210,87 @@ const UnitSelector = () => {
   return (
     <div className='flex flex-col'>
       {/* Modern Toggle-Style Unit Selector */}
-      <div className='flex flex-col gap-2 rounded-4xl border-1 border-(--border-color) bg-(--background-color) p-1 shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-xl md:flex-row'>
-        <div className='flex w-full flex-col gap-2 rounded-[28px] bg-(--card-color) p-2 md:flex-row'>
-          {collections.map(collection => {
-            const isSelected = collection.name === selectedCollection;
+      <div className='flex flex-col gap-2 rounded-4xl border-1 border-(--border-color) bg-(--background-color) p-1 shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-xl'>
+        <div className='flex w-full flex-col gap-2 rounded-[28px] bg-(--card-color) p-2'>
+          <div className='flex flex-col gap-2 md:flex-row'>
+            {collections.map(collection => {
+              const isSelected = collection.name === selectedCollection;
 
-            return (
-              <div key={collection.name} className='relative flex-1'>
-                {/* Sliding indicator - smooth animation matching Stats page */}
-                {isSelected && (
-                  <motion.div
-                    layoutId='collection-selector-indicator'
-                    className='absolute inset-0 rounded-3xl'
-                    transition={{
-                      type: 'spring',
-                      stiffness: 300,
-                      damping: 30,
-                    }}
-                  >
-                    <div
-                      className={clsx(
-                        'h-full w-full rounded-3xl border-b-10 border-(--main-color-accent) bg-(--main-color)',
-                        UNIT_SELECTOR_ACTIVE_FLOAT_CLASSES,
-                      )}
-                    />
-                  </motion.div>
-                )}
-                <ActionButton
-                  onClick={() => handleCollectionSelect(collection.name)}
-                  colorScheme={isSelected ? undefined : undefined}
-                  borderColorScheme={isSelected ? undefined : undefined}
-                  borderBottomThickness={0}
-                  borderRadius='3xl'
-                  className={clsx(
-                    'relative z-10 w-full flex-col gap-1 px-4 pt-4 pb-6',
-                    isSelected && UNIT_SELECTOR_ACTIVE_FLOAT_CLASSES,
-                    isSelected
-                      ? 'bg-transparent text-(--background-color)'
-                      : 'bg-transparent text-(--main-color) hover:bg-(--border-color)/50',
-                  )}
-                >
-                  <div className='flex items-center gap-2'>
-                    <span className='text-xl'>{collection.displayName}</span>
-                    <span
-                      className={clsx(
-                        'rounded px-1.5 py-0.5 text-xs',
-                        'bg-(--border-color) text-(--secondary-color)',
-                      )}
+              return (
+                <div key={collection.name} className='relative flex-1'>
+                  {/* Sliding indicator - smooth animation matching Stats page */}
+                  {isSelected && (
+                    <motion.div
+                      layoutId='collection-selector-indicator'
+                      className='absolute inset-0 rounded-3xl'
+                      transition={{
+                        type: 'spring',
+                        stiffness: 300,
+                        damping: 30,
+                      }}
                     >
-                      {collection.jlpt}
-                    </span>
-                  </div>
-                  <span
+                      <div
+                        className={clsx(
+                          'h-full w-full rounded-3xl border-b-10 border-(--main-color-accent) bg-(--main-color)',
+                          UNIT_SELECTOR_ACTIVE_FLOAT_CLASSES,
+                        )}
+                      />
+                    </motion.div>
+                  )}
+                  <ActionButton
+                    onClick={() => handleCollectionSelect(collection.name)}
+                    colorScheme={isSelected ? undefined : undefined}
+                    borderColorScheme={isSelected ? undefined : undefined}
+                    borderBottomThickness={0}
+                    borderRadius='3xl'
                     className={clsx(
-                      'text-xs',
+                      'relative z-10 w-full flex-col gap-1 px-4 pt-4 pb-6',
+                      isSelected && UNIT_SELECTOR_ACTIVE_FLOAT_CLASSES,
                       isSelected
-                        ? 'text-(--background-color)/80'
-                        : 'text-(--secondary-color)/80',
+                        ? 'bg-transparent text-(--background-color)'
+                        : 'bg-transparent text-(--main-color) hover:bg-(--border-color)/50',
                     )}
                   >
-                    {collection.subtitle}
-                  </span>
-                </ActionButton>
-              </div>
-            );
-          })}
+                    <div className='flex items-center gap-2'>
+                      <span className='text-xl'>{collection.displayName}</span>
+                      <span
+                        className={clsx(
+                          'rounded px-1.5 py-0.5 text-xs',
+                          'bg-(--border-color) text-(--secondary-color)',
+                        )}
+                      >
+                        {collection.jlpt}
+                      </span>
+                    </div>
+                    <span
+                      className={clsx(
+                        'text-xs',
+                        isSelected
+                          ? 'text-(--background-color)/80'
+                          : 'text-(--secondary-color)/80',
+                      )}
+                    >
+                      {collection.subtitle}
+                    </span>
+                  </ActionButton>
+                </div>
+              );
+            })}
+          </div>
+
+          {activeCollection &&
+            shouldShowSubunitSelector(activeCollection.levelCount) && (
+              <>
+                <div className='h-0.5 bg-(--border-color)' />
+                <SubunitSelector
+                  subunits={activeSubunits}
+                  selectedSubunitId={resolvedSelectedSubunitId}
+                  onSelect={handleSubunitSelect}
+                />
+              </>
+            )}
         </div>
       </div>
-
-      {activeCollection &&
-        shouldShowSubunitSelector(activeCollection.levelCount) && (
-          <div className='mt-4'>
-            <SubunitSelector
-              subunits={activeSubunits}
-              selectedSubunitId={resolvedSelectedSubunitId}
-              onSelect={handleSubunitSelect}
-            />
-          </div>
-        )}
 
       {/* Selection Status Bar - Fixed at top */}
       <SelectionStatusBar />
